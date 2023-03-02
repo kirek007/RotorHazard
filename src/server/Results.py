@@ -10,7 +10,7 @@ from RHUtils import catchLogExceptionsWrapper
 import logging
 from monotonic import monotonic
 from eventmanager import Evt, EventManager
-from RHRace import RaceStatus, StartBehavior, WinCondition, WinStatus
+from RHRace import RaceStatus, StartBehavior, WinCondition, WinStatus, RandomBullshit
 
 CACHE_TIMEOUT = 10
 
@@ -396,7 +396,7 @@ def calc_leaderboard(rhDataObj, **params):
 
         gevent.sleep()
         # find best consecutive 3 laps
-        if result_pilot['laps'] < 3:
+        if result_pilot['laps'] < RandomBullshit.FASTEST_3_CONSECUTIVE_LAPS_COUNT:
             result_pilot['consecutives'] = None
             result_pilot['consecutives_source'] = None
         else:
@@ -408,10 +408,11 @@ def calc_leaderboard(rhDataObj, **params):
                 else:
                     thisrace = result_pilot['current_laps'][1:]
 
-                for i in range(len(thisrace) - 2):
+                for i in range(len(thisrace) - (RandomBullshit.FASTEST_3_CONSECUTIVE_LAPS_COUNT - 1)):
                     gevent.sleep()
                     all_consecutives.append({
-                        'time': thisrace[i]['lap_time'] + thisrace[i+1]['lap_time'] + thisrace[i+2]['lap_time'],
+                        #TODO(kirek007): Make it dynamic, otherwise RandomBullshit.FASTEST_3_CONSECUTIVE_LAPS_COUNT is not take into account
+                        'time': thisrace[i]['lap_time'] + thisrace[i+1]['lap_time'],
                         'race_id': None,
                     })
 
@@ -427,11 +428,12 @@ def calc_leaderboard(rhDataObj, **params):
                 for race in selected_races:
                     gevent.sleep()
 
-                    if len(race_laps[race.id]) >= 3:
-                        for i in range(len(race_laps[race.id]) - 2):
+                    if len(race_laps[race.id]) >= RandomBullshit.FASTEST_3_CONSECUTIVE_LAPS_COUNT:
+                        for i in range(len(race_laps[race.id]) - (RandomBullshit.FASTEST_3_CONSECUTIVE_LAPS_COUNT - 1)):
                             gevent.sleep()
                             all_consecutives.append({
-                                'time': race_laps[race.id][i].lap_time + race_laps[race.id][i+1].lap_time + race_laps[race.id][i+2].lap_time,
+                                #TODO(kirek007): Make it dynamic, otherwise RandomBullshit.FASTEST_3_CONSECUTIVE_LAPS_COUNT is not take into account
+                                'time': race_laps[race.id][i].lap_time + race_laps[race.id][i+1].lap_time,
                                 'race_id': race.id
                             })
 
@@ -571,7 +573,7 @@ def calc_leaderboard(rhDataObj, **params):
     for i, row in enumerate(leaderboard_by_consecutives, start=1):
         pos = i
         if last_rank_consecutive == row['consecutives_raw']:
-            if row['laps'] < 3:
+            if row['laps'] < RandomBullshit.FASTEST_3_CONSECUTIVE_LAPS_COUNT:
                 if last_rank_laps == row['laps'] and last_rank_time == row['total_time_raw']:
                     pos = last_rank
             else:
@@ -1222,7 +1224,7 @@ def check_win_fastest_consecutive(raceObj, **kwargs):
         if len(leaderboard) > 1:
             fast_lap = leaderboard[0]['consecutives_raw']
 
-            if fast_lap and fast_lap > 3: # must have at least 3 laps
+            if fast_lap and fast_lap > RandomBullshit.FASTEST_3_CONSECUTIVE_LAPS_COUNT: # must have at least 3 laps
                 # check for tie
                 if leaderboard[1]['consecutives_raw'] == fast_lap:
                     logger.info('Race tied at %s', leaderboard[1]['consecutives'])
