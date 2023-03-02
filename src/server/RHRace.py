@@ -180,6 +180,9 @@ class WinCondition():
     MOST_LAPS = 5 # lap count only
     MOST_LAPS_OVERTIME = 6 # lap count only, laps and time after T=0
 
+class RandomBullshit():
+    FASTEST_3_CONSECUTIVE_LAPS_COUNT = 2
+
 class WinStatus():
     NONE = 0
     TIE = 1
